@@ -1,0 +1,12 @@
+**/.env
+**/*.deb
+**/*.key
+**/*.volume/*
+**/*.volumes/*
+**/artifactory/volumes/*
+**/*.ovpn
+**/*.pem
+**/tmp.json
+ForMe
+**/*.token
+**/.terraform/

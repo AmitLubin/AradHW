@@ -1,0 +1,47 @@
+- name: Create users
+  hosts: servers
+  become: true
+
+  vars:
+    users:
+      - amit
+      - xi_xiping
+
+  tasks:
+    - name: Create users
+      user:
+        name: "{{ item }}"
+        shell: /bin/bash
+        create_home: yes
+        state: present
+        # password: "{{ '1234' | password_hash('sha512') }}"
+      loop: "{{ users }}"
+
+    - name: Add users to sudoers
+      user:
+        name: "{{ item }}"
+        groups: sudo
+        append: yes
+        state: present
+      loop: "{{ users }}"
+
+    - name:
+      file:
+        path: "/home/{{ item }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ item }}"
+        group: "{{ item }}"
+      loop: "{{ users }}"
+
+    - name: Copy the aws private key to machines
+      connection: ssh
+      copy:
+        src: /home/test/.ssh/aws_key
+        dest: "/home/{{ item }}/.ssh/aws_key"
+        mode: '0600'
+        owner: "{{ item }}"
+        group: "{{ item }}"
+      loop: "{{ users }}"
+
+

@@ -1,0 +1,31 @@
+- name: Install mysql
+  hosts: servers
+  become: true
+
+  roles:
+    - geerlingguy.mysql
+
+  tasks:
+    - name: Add user 'amit' and grant it privilage to all
+      mysql_user:
+        name: amit
+        password: 1234
+        state: present
+        priv: "*.*:ALL,GRANT"
+
+    - name: Create a database
+      mysql_db:
+        name: my_db
+        state: present
+
+  #   - name: Install MySQL server
+  #     apt:
+  #       name: mysql-server
+  #       state: present
+  #       update_cache: yes
+    
+  #   - name: Check MySQL is disabled
+  #     systemd:
+  #       name: mysql
+  #       state: stopped
+  #       enabled: no

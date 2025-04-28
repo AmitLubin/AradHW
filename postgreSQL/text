@@ -1,0 +1,3 @@
+jdbc:postgresql://postgresql:5432/artifactory_db
+artifactory
+artifactory123

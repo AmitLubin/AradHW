@@ -1,0 +1,36 @@
+services:
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: mysql
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: 1234
+  #     MYSQL_DATABASE: my_db
+  #     MYSQL_USER: amit
+  #     MYSQL_PASSWORD: 1234
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - artifactory_network
+
+  postgresql:
+    image: postgres:15
+    container_name: artifactory_postgres
+    environment:
+      POSTGRES_USER: artifactory
+      POSTGRES_PASSWORD: artifactory123
+      POSTGRES_DB: artifactory_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - artifactory_network
+
+volumes:
+  pg_data:
+
+networks:
+  artifactory_network:
+    name: artifactory_network

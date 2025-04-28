@@ -1,0 +1,24 @@
+services:
+  rabbitMQ:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "7070:8080"
+      - "7071:15672"
+      - "7072:5672"
+    environment:
+      - "RABBITMQ_DEFAULT_USER=amit"
+      - "RABBITMQ_DEFAULT_PASS=1234"
+    volumes:
+      - rabbitVol:/var/lib/rabbitmq
+      - /home/test/Code/HW/rabbitMQ/definitions.json:/definitions.json
+      - /home/test/Code/HW/rabbitMQ/10-defaults.conf:/etc/rabbitmq/conf.d/10-defaults.conf
+    networks:
+      - default_net
+
+volumes:
+  rabbitVol:
+
+networks:
+  default_net:
+    name: default_net

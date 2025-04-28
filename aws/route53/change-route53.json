@@ -1,0 +1,19 @@
+{
+    "Comment": "Update A record for amit.aws.cts.care.",
+    "Changes": [
+      {
+        "Action": "UPSERT",
+        "ResourceRecordSet": {
+          "Name": "amit.aws.cts.care.",
+          "Type": "A",
+          "TTL": 300,
+          "ResourceRecords": [
+            {
+              "Value": "51.17.184.174"
+            }
+          ]
+        }
+      }
+    ]
+  }
+  

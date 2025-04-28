@@ -1,0 +1,38 @@
+- name: Get the port from consul
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Get NGINX port from Consul
+      uri:
+        url: "http://localhost:8500/v1/kv/myapp/config/nginx_port?raw"
+        method: GET
+        return_content: yes
+      register: nginx_port_raw
+
+    - name: set nginx_port fact
+      set_fact:
+        nginx_port: "{{ nginx_port_raw.content }}"
+
+- name: Set nginx docker container on remote machine with port from consul variable
+  hosts: servers
+  become: true
+  gather_facts: no
+  
+  vars:
+    nginx_port: "{{ hostvars['localhost']['nginx_port'] }}"
+
+  tasks:
+    - name: Pull nginx image
+      community.docker.docker_image:
+        name: nginx
+        source: pull
+      
+    - name: Run nginx container
+      community.docker.docker_container:
+        name: nginx
+        image: nginx
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ nginx_port }}:80"

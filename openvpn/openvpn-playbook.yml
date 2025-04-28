@@ -1,0 +1,55 @@
+- name: OpenVPN setup
+  hosts: servers
+  become: true
+  roles:
+    - role: openvpn
+
+- name: Applying ip table rules
+  hosts: servers
+  become: true
+
+  collections:
+    - community.general
+  
+  tasks:
+    - name: Allow incoming OpenVPN UDP traffic on port 1194
+      iptables:
+        chain: INPUT
+        protocol: udp
+        destination_port: 1194
+        jump: ACCEPT
+        state: present
+
+    - name: Allow forwarding for OpenVPN subnet
+      iptables:
+        chain: FORWARD
+        source: 10.8.0.0/24
+        jump: ACCEPT
+        state: present
+
+    - name: Allow established and related connections in FORWARD
+      iptables:
+        chain: FORWARD
+        ctstate: RELATED,ESTABLISHED
+        jump: ACCEPT
+        state: present
+  
+    - name: Save iptables rules
+      command: iptables-save
+      register: iptables_rules
+
+    - name: Save to /etc/iptables/rules.v4
+      copy:
+        content: "{{ iptables_rules.stdout }}"
+        dest: /etc/iptables/rules.v4
+
+- name: Copy amit.ovpn to folder
+  hosts: servers
+  become: true
+
+  tasks:
+    - name: Get amit.ovpn from ec2 machine
+      fetch:
+        src: /etc/openvpn/amit.ovpn
+        dest: ./
+        flat: yes

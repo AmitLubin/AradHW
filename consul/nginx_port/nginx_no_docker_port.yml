@@ -1,0 +1,108 @@
+- name: Get the port from consul
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Get NGINX port from Consul
+      uri:
+        url: "http://localhost:8500/v1/kv/myapp/config/nginx_port?raw"
+        method: GET
+        return_content: yes
+      register: nginx_port_raw
+
+    - name: set nginx_port fact
+      set_fact:
+        nginx_port: "{{ nginx_port_raw.content }}"
+
+- name: Install nginx on remote
+  hosts: servers
+  become: true
+
+  tasks:
+    - name: Check if nginx is installed
+      package:
+        name: nginx
+        state: present
+      notify: 
+        - Install Nginx
+        - Add user to group root
+
+    - name: Get Nginx service status
+      service_facts:
+
+    - name:  Check if nginx is running
+      debug:
+        msg: "Nginx isn't running, restarting.."
+      when: ansible_facts.services['nginx.service'].state != 'running'
+      notify: Restart Nginx
+  
+  handlers:
+    - name: install Nginx
+      apt:
+        name: nginx
+        state: latest
+        update_cache: yes
+    
+    - name: Add user to group root
+      user:
+        name: ubuntu
+        groups: root
+        state: present
+        append: true
+    
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
+
+- name: Set nginx docker container on remote machine with port from consul variable
+  hosts: servers
+  become: true
+
+  vars:
+    nginx_port: "{{ hostvars['localhost']['nginx_port'] }}"
+
+  tasks:
+    - name: Check if nginx listens on port {{ nginx_port }}
+      wait_for:
+        port: "{{ nginx_port }}"
+        host: "127.0.0.1"
+        timeout: 3
+        state: started
+      register: nginx_port_check
+      ignore_errors: true
+    
+    - name: Copy conf_file if Nginx isn't running port {{ nginx_port }}
+      command: /bin/true
+      when: nginx_port_check.failed
+      changed_when: true
+      notify:
+        - Copy conf file
+        - Restart Nginx
+
+    - name: Ensure nginx is running
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+
+    
+    
+  handlers: 
+    - name: Copy conf file
+      template:
+        src: 11-special-port.conf.j2
+        dest: /etc/nginx/conf.d/11-special-port.conf
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
+    
+    
+    
+    

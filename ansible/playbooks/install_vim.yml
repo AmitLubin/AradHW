@@ -1,0 +1,12 @@
+- name: Install vim
+  hosts: servers
+  become: true
+
+  tasks:
+    - name: Ensure vim is installed
+      apt:
+        name: vim
+        state: present # checks if vim is installed
+        update_cache: yes # uses apt update
+    
+    

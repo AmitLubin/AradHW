@@ -1,0 +1,21 @@
+services:
+   postgresql:
+    image: postgres:15
+    container_name: postgresql
+    environment:
+      POSTGRES_USER: artifactory
+      POSTGRES_PASSWORD: artifactory123
+      POSTGRES_DB: artifactory_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - artifactory_network
+
+volumes:
+  pg_data:
+
+networks:
+  artifactory_network:
+    name: artifactory_network

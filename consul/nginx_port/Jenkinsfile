@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+
+    stages {
+        stage ('Message'){
+            steps {
+                echo "Hi, I'm gonna insert a port variable for nginx"
+            }
+        }
+
+        stage ('Insert into consul'){
+            steps {
+                script {
+                    echo "Sending port variable to consul"
+                    sh "curl --request PUT --data '6789' consul:8500/v1/kv/myapp/config/nginx_port"
+                }
+            }
+        }
+
+        stage ('Verify the variable'){
+            steps {
+                script {
+                    sh "curl consul:8500/v1/kv/myapp/config/nginx_port?raw"
+                }
+            }
+        }
+
+        // Last stage
+        stage ('Cleanup'){
+            steps{
+                cleanWs()
+            }
+        }
+    }
+}

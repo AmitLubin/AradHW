@@ -1,0 +1,12 @@
+- name: Install docker
+  hosts: servers
+  become: true
+
+  roles:
+    - geerlingguy.docker
+  # tasks:
+  #   - name: Install Docker
+  #     snap:
+  #       name: docker
+  #       state: present
+  #       classic: yes

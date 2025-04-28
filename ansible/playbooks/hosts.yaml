@@ -1,0 +1,4 @@
+servers:
+    hosts:
+        amit.aws.cts.care:
+            ansible_user: ubuntu
