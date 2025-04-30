@@ -12,6 +12,7 @@ pipeline {
             steps {
                 echo "Building"
                 sh "cd aws/ecr/nginx"
+                sh "ls"
                 sh "docker build -t 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/nginx:${BUILD_NUMBER} ."
             }
         }
