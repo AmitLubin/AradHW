@@ -22,12 +22,7 @@ pipeline {
         stage ('Docker push'){
             steps {
                 echo "Pushing"
-                sshagent(credentials: ['EC2_ansible_amit']){
-                    sh """
-                        ssh-keyscan il-central-1.console.aws.amazon.com >> ~/.ssh/known_hosts
-                        docker push 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/nginx:${BUILD_NUMBER}
-                    """
-                }
+                sh "docker push 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/nginx:${BUILD_NUMBER}"
             }
         }
     }
