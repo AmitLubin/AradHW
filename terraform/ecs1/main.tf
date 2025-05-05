@@ -141,3 +141,13 @@ resource "aws_lb_listener" "imtec_listener" {
     target_group_arn = aws_lb_target_group.amit_ecs_tg.arn  # Forward traffic to target group
   }
 }
+
+output "rds_username" {
+  value = local.rds_credentials["username"]
+  sensitive = true
+}
+
+output "db_host" {
+  value = data.aws_ssm_parameter.db_host.value
+  sensitive = true
+}
