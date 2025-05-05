@@ -10,3 +10,4 @@
 ForMe
 **/*.token
 **/.terraform/
+**/node_modules

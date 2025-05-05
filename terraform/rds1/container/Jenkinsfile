@@ -1,0 +1,17 @@
+pipeline {
+    agent any
+
+    stages {
+        stage ('Open msg'){
+            steps {
+                echo "Gonna upload my docker to ecs"
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
