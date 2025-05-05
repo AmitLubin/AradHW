@@ -56,7 +56,7 @@ async function getConnection() {
     // const dbHost = await getSSMParameter('/amit/db/db-host');
     
     // Log connection info for debugging (remove in production)
-    console.log(`Connecting to DB at ${dbHost} with user ${dbSecret.username}`);
+    //console.log(`Connecting to DB at ${dbHost} with user ${dbSecret.username}`);
     
     // Create a connection pool
     pool = mysql.createPool({
@@ -69,6 +69,8 @@ async function getConnection() {
       connectionLimit: 10,
       queueLimit: 0
     });
+
+    console.log("pool created");
     
     // Test the connection
     const conn = await pool.getConnection();
