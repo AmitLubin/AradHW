@@ -1,24 +1,28 @@
-// /api/getSongs.js
+// Fixed /api/getSongs.js
 const express = require('express');
 const router = express.Router();
-
 const { getConnection } = require('./getConnection');
-const db = getConnection();
-if (db == null) {
-    console.log("db is null in getSongs");
-}
 
 router.get('/getSongs', async (req, res) => {
-    const db = await getConnection();
-    if (!db) return res.status(500).json({ error: 'DB connection failed' });
-
-    db.query('SELECT song, album, artist FROM amit_table', (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+  try {
+    // Get a connection from the pool
+    const connection = await getConnection();
+    
+    // Execute the query
+    const [results] = await connection.query('SELECT song, album, artist FROM amit_table');
+    
+    // Release the connection back to the pool
+    connection.release();
+    
+    // Return results
+    res.json(results);
+  } catch (err) {
+    console.error('Error getting songs:', err);
+    res.status(500).json({ 
+      error: 'Database error occurred', 
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined 
     });
-
-    db.end();
+  }
 });
-
 
 module.exports = router;
