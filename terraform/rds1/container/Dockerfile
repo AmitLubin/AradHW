@@ -1,7 +1,7 @@
 FROM node:23-alpine
 WORKDIR /app
 
-COPY pakcage.json .
+COPY package.json .
 RUN npm install
 
 COPY . .
