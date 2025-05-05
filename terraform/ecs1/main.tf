@@ -1,5 +1,6 @@
 provider "aws" {
   region = "il-central-1" 
+  profile = "default"
 }
 
 data "aws_vpc" "imtech_vpc" {
@@ -18,13 +19,30 @@ data "aws_lb" "imtec" {
   name = "imtec"  # Provide the name of the existing ALB
 }
 
+
+
+data "aws_secretsmanager_secret_version" "rds_secret" {
+  secret_id = "rds!db-777ab260-d218-40d6-8bff-a5f247435ce3"
+}
+
+locals {
+  rds_credentials = jsondecode(data.aws_secretsmanager_secret_version.rds_secret.secret_string)
+}
+
+data "aws_ssm_parameter" "db_host" {
+  name           = "/amit/db/db-host"
+  with_decryption = true
+}
+
+
+
 resource "aws_cloudwatch_log_group" "amit_log_group" {
   name = "/ecs/amit-nginx"  # Log group name
 }
 
 resource "aws_lb_target_group" "amit_ecs_tg" {
   name     = "ozai-ecs-tg"
-  port     = 80  # Port on which your containers will be listening
+  port     = 3000  # Port on which your containers will be listening
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.imtech_vpc.id
 
@@ -55,16 +73,32 @@ resource "aws_ecs_task_definition" "ecs_nginx" {
 
   container_definitions = jsonencode([{
     name      = "amit-nginx"
-    image     = "314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/nginx:latest"
+    image     = "314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/node:latest"
     memory    = 512
     cpu       = 256
     portMappings = [
       {
-        containerPort = 80
-        hostPort      = 80
+        containerPort = 3000
+        hostPort      = 3000
         protocol      = "tcp"
       }
     ]
+
+    environment = [
+      {
+        name  = "DB_HOST"
+        value = data.aws_ssm_parameter.db_host.value
+      },
+      {
+        name  = "DB_USER"
+        value = local.rds_credentials["username"]
+      },
+      {
+        name  = "DB_PASS"
+        value = local.rds_credentials["password"]
+      }
+    ]
+
     logConfiguration: {
       logDriver: "awslogs",
       options: {
@@ -93,7 +127,7 @@ resource "aws_ecs_service" "nginx_ecs_service" {
   load_balancer {
     target_group_arn = aws_lb_target_group.amit_ecs_tg.arn
     container_name   = "amit-nginx"
-    container_port   = 80
+    container_port   = 3000
   }
 }
 
