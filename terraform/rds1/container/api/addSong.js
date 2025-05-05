@@ -15,6 +15,8 @@ router.post('/addSong', async (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ status: 'OK' });
     });
+
+    db.end();
 });
 
 module.exports = router;
