@@ -27,6 +27,18 @@ pipeline {
                 """
             }
         }
+
+        stage ('Update ECS'){
+            steps {
+                echo "Updating ECS"
+                sh """
+                    aws ecs update-service \
+                        --cluster imtech \
+                        --service amit-nginx-service \
+                        --force-new-deployment
+                """
+            }
+        }
     }
 
     post {
