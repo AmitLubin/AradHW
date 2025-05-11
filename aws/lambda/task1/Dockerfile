@@ -4,11 +4,12 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
+# Install Flask
+RUN pip install Flask && \
+    pip install authlib werkzeug requests
+
 # Copy app code
 COPY app.py .
-
-# Install Flask
-RUN pip install Flask
 
 # Expose port
 EXPOSE 3000
