@@ -20,7 +20,7 @@ data "aws_api_gateway_resource" "root" {
 resource "aws_api_gateway_resource" "stats" {
   rest_api_id = var.api_id
   parent_id   = data.aws_api_gateway_resource.root.id
-  path_part   = "stats"
+  path_part   = "mine"
 }
 
 # Add ANY method to /stats
@@ -48,14 +48,14 @@ resource "aws_lambda_permission" "apigw_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = data.aws_lambda_function.amit_lambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${var.api_id}/dev/ANY/stats"
+  source_arn    = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${var.api_id}/dev/ANY/mine"
 }
 
 # Deploy the API (creates deployment under a stage)
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on  = [aws_api_gateway_integration.lambda_any_stats]
   rest_api_id = var.api_id
-  description = "New deployment for /stats route"
+  description = "New deployment for /mine route"
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
