@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create ECS service in existing cluster 'imtech'
+
+Resources:
+
+  MyTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: my-task-family
+      Cpu: "256"
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: arn:aws:iam::314525640319:role/ecsTaskExecutionRole
+      ContainerDefinitions:
+        - Name: dumb_container
+          Image: 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/gitlab/test1:latest
+          PortMappings:
+            - ContainerPort: 80
+
+  MyECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: imtech  
+      LaunchType: FARGATE
+      DesiredCount: 1
+      ServiceName: amit-ecs-cf
+      TaskDefinition: !Ref MyTaskDefinition
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - subnet-088b7d937a4cd5d85
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - sg-0ac3749215afde82a      
+
+Outputs:
+  ECSServiceName:
+    Description: ECS created by cloud formation
+    Value: !Ref MyECSService
