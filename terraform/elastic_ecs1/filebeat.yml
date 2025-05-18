@@ -1,0 +1,14 @@
+filebeat.inputs:
+  - type: filestream
+    id: nginx-filebeat
+    enabled: true
+    paths:
+      - /tmp/filebeat-logs/*.log
+
+output.logstash:
+  hosts: ["172.30.100.121:5599"]
+
+# Optional logging
+logging:
+  level: info
+  to_files: false
