@@ -16,3 +16,4 @@ ForMe
 **/.secret
 **/secret.yml
 **/secret.yaml
+**/k8s/*/volume
