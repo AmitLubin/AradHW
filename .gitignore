@@ -13,3 +13,6 @@ ForMe
 **/node_modules
 **/*.zip
 **/aws/lambda/task1/lambda-requests/
+**/.secret
+**/secret.yml
+**/secret.yaml
