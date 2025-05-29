@@ -12,6 +12,7 @@ services:
       - /usr/bin/docker:/usr/bin/docker
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/test/.ssh:/var/jenkins_home/.ssh
+      - ~/.kube/config:/var/jenkins_home/.kube/config:ro
     restart: always
     networks:
       - default_net
