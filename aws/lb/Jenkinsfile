@@ -1,0 +1,113 @@
+def get_instanes_num(arn){
+    echo "entered"
+    def instances = sh(
+        script: "aws elbv2 describe-target-health --target-group-arn \"$arn\" --query \"TargetHealthDescriptions[*].Target.Id\" --output text",
+        returnStdout: true
+    ).trim()
+    def ins_array = "${instances}".trim().split(/\s+/)
+    def ins_num = ins_array.size().toInteger()
+    echo "$ins_num"
+    return ins_num;
+}
+
+pipeline {
+    agent any
+
+    environment {
+        TARGET_GROUP_NAME = "tg-umat-haash"
+    }
+
+    stages {
+        stage ('Opening msg'){
+            steps {
+                echo "Hi, gonna update each of the ec2 instances individually"
+            }
+        }
+
+        stage ('Get group arn'){
+            steps {
+                script {
+                    env.TARGET_GROUP_ARN = sh(
+                        script: "aws elbv2 describe-target-groups --names \"$TARGET_GROUP_NAME\" --query 'TargetGroups[0].TargetGroupArn' --output text",
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+
+        stage ('Get instance ID\'s'){
+            steps{
+                script {
+                    env.INSTANCE_IDS = sh(
+                        script: "aws elbv2 describe-target-health --target-group-arn \"$TARGET_GROUP_ARN\" --query \"TargetHealthDescriptions[*].Target.Id\" --output text",
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+
+        stage ('Update instances'){
+            steps{
+                script {
+                    sh "touch hosts.yaml"
+                    def instance_array = "${env.INSTANCE_IDS}".trim().split(/\s+/) //Regex for splitting all the spaces
+                    def size_array = instance_array.size().toInteger()
+                    echo "Starting array size: ${size_array}"
+                    instance_array.each { instance ->
+                        echo "instance ID: ${instance}"
+                        try {
+                            sh """
+                                aws elbv2 deregister-targets \
+                                --target-group-arn "$TARGET_GROUP_ARN" \
+                                --targets Id=${instance}
+                            """
+
+                            
+                            // while (get_instanes_num(TARGET_GROUP_ARN) >= size_array){
+                            //     sleep 1;
+                            // }
+                            // def current_instances = sh(
+                            //     script: "aws elbv2 describe-target-health --target-group-arn \"$TARGET_GROUP_ARN\" --query \"TargetHealthDescriptions[*].Target.Id\" --output text",
+                            //     returnStdout: true
+                            // ).trim()
+                            // echo "Traget group connected machines are: ${current_instances}"
+
+                            def ip_address = sh(script: """
+                                aws ec2 describe-instances \
+                                --instance-ids ${instance} \
+                                --query 'Reservations[0].Instances[0].PublicIpAddress' \
+                                --output text
+                            """, returnStdout: true).trim()
+
+                            sh """
+                                echo "servers:" > hosts.yaml
+                                echo "    hosts:" >> hosts.yaml
+                                echo "        ${ip_address}:" >> hosts.yaml
+                                echo "            ansible_user: ubuntu" >> hosts.yaml
+                            """
+                            sshagent(credentials: ['EC2_ansible_amit']){
+                                sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i hosts.yaml consul/nginx_port/append_html.yml"
+                            }
+                        } catch (err) {
+                            echo "Failed ansible"
+                        }
+                        
+
+                        sh """
+                            aws elbv2 register-targets \
+                            --target-group-arn "$TARGET_GROUP_ARN" \
+                            --targets Id=${instance}
+                        """
+                    }
+                }
+            }
+        }
+
+        //Last stage
+        stage ('Cleanup'){
+            steps {
+                cleanWs()
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{"stats": [
+  {
+    "interface": "enp0s3",
+    "rx_bytes_per_sec": 24,
+    "tx_bytes_per_sec": 6
+  }
+]}

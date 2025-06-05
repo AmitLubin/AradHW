@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-{{ .Release.Name }}-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nginx-custom
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: nginx-custom
+  template:
+    metadata:
+      labels:
+        app: nginx-custom
+    spec:
+      containers:
+        - name: nginx
+          image: "amitlubin/nginx-changed:{{ .Values.tag }}"
+          ports:
+            - containerPort: 80

@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    environment {
+        CHANGE = false
+    }
+
+    parameters {
+        string(name: 'TAG', defaultValue: 'latest', description: 'Nginx tag')
+        string(name: 'DEPLOYMENT_NAME', defaultValue: 'nginx-custom-deployment', description: 'The deployment name is needed to retrieve the current docker image used')
+    }
+
+    stages {
+        stage ('Echo msg') {
+            steps {
+                echo "hi, I'm gonna update your nginx image"
+            }
+        }
+
+        stage ('Check docker image') {
+            steps {
+                script {
+                    def currentTag = sh(
+                        script: "kubectl get deployment ${DEPLOYMENT_NAME} -o jsonpath='{.spec.template.spec.containers[0].image}' | awk -F ':' '{print \$2}'",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "$currentTag"
+
+                    if (params.TAG != currentTag) { 
+                        CHANGE = true 
+                    }
+                }
+            }
+        }
+
+        stage ('Upgrade chart') {
+            when {
+                expression { 
+                    return CHANGE == true
+                }
+            } 
+            steps {
+                sh """
+                    cd ./k8s/nginx-custom/
+                    helm upgrade --install custom ./nginx-custom/ -f values.yaml --set tag=${TAG}
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

@@ -1,0 +1,9 @@
+- name: Istall artifactory on remote machine
+  hosts: servers
+  become: true
+  collections:
+    - jfrog.platform
+  vars:
+    artifactory_enabled: true
+  roles:
+    - artifactory

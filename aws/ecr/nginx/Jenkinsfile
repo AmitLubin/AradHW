@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    stages {
+        stage ('Opening msg') {
+            steps {
+                echo "Hi, gonna push"
+            }
+        }
+
+        stage ('Docker build'){
+            steps {
+                echo "Building"
+                sh """
+                    cd aws/ecr/nginx/
+                    ls
+                    docker build -t 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/nginx:${BUILD_NUMBER} .
+                """
+            }
+        }
+
+        stage ('Docker push'){
+            steps {
+                echo "Pushing"
+                sh """
+                    aws ecr get-login-password --region il-central-1 | docker login --username AWS --password-stdin 314525640319.dkr.ecr.il-central-1.amazonaws.com
+                    docker push 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/nginx:${BUILD_NUMBER}
+                """
+            }
+        }
+    }
+
+    post {
+        always ('Cleanup') {
+            cleanWs()
+        }
+    }
+
+
+    
+}

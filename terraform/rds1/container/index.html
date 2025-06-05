@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Table</title>
+</head>
+<body>
+  <h1 id="output"></h1>
+  <script>
+    const envVar = "{{DB_HOST}}"; // placeholder to be replaced
+    document.getElementById("output").innerText = `Env: ${envVar}`;
+  </script>
+
+  <h1 id="output"></h1>
+  <script>
+    const sendVar = "{{DB_USER}}"; // placeholder to be replaced
+    document.getElementById("output").innerText = `Env: ${envVar}`;
+  </script>
+  <h1>Songs List</h1>
+  <table border="1" id="songsTable">
+    <thead>
+      <tr>
+        <th>Song</th>
+        <th>Album</th>
+        <th>Artist</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Add a Song</h2>
+  <form id="addSongForm">
+    <input type="text" name="song" placeholder="Song" required />
+    <input type="text" name="album" placeholder="Album" required />
+    <input type="text" name="artist" placeholder="Artist" required />
+    <button type="submit">Add</button>
+  </form>
+
+  <script>
+    async function loadSongs() {
+      const res = await fetch('/api/getSongs');
+      const data = await res.json();
+      const tbody = document.querySelector('#songsTable tbody');
+      tbody.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.song}</td><td>${row.album}</td><td>${row.artist}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('addSongForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const payload = Object.fromEntries(formData.entries());
+      await fetch('/api/addSong', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      e.target.reset();
+      loadSongs();
+    });
+
+    loadSongs();
+  </script>
+</body>
+</html>

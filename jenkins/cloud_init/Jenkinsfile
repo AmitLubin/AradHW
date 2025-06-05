@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    environment {
+        TAG = 'Cloud-init-curl-job'
+    }
+
+    stages {
+        stage ('Opening msg'){
+            steps {
+                echo "Hi, hope you ran my by using curl and not cheated"
+            }
+        }
+
+        stage ('Run append-html playbook'){
+            steps {
+                sshagent(credentials: ['EC2_ansible_amit']){
+                    sh """
+                        ls
+                        ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/invertory/hosts.yaml consul/nginx_port/append_html.yml
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

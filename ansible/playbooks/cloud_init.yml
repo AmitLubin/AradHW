@@ -1,0 +1,23 @@
+- name: Make cloud_init match my DNS record to its public IP everytime it restarts
+  hosts: servers
+  become: true
+
+  tasks:
+    - name: Copy ans_auto_dns.sh to /opt/
+      copy:
+        src: ans_auto_dns.sh
+        dest: /opt/ans_auto_dns.sh
+        mode: '0755'
+    
+    - name: Copy 98-chg-dns.cfg to /etc/cloud/cloud.cfg.d/
+      copy:
+        src: 98-chg-dns.cfg
+        dest: /etc/cloud/clouf.cfg.d/98-chg-dns.cfg
+        mode: '0644'
+
+    - name: Apply cloud-init changes
+      shell: | 
+        cloud-init clean
+        cloud-init init
+        cloud-init modules --mode=config
+        cloud-init modules --mode=final

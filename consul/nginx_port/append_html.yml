@@ -1,0 +1,20 @@
+- name: Change index.html in /home/ubuntu/sites
+  hosts: servers
+  become: true
+  
+  vars:
+    - tag_var: "{{ lookup('env', 'TAG') | default('default_name', true) }}"
+
+  tasks: 
+    - name: Check var
+      debug:
+        msg: "tag_var is: {{ tag_var }}"
+    
+    - name: Copy index file
+      template:
+        src: index.html.j2
+        dest: /var/www/html/jen_index.html
+        owner: root
+        group: root
+        mode: '0755'
+  

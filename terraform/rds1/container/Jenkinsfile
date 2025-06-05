@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    stages {
+        stage ('Open msg'){
+            steps {
+                echo "Gonna upload my docker to ecs"
+            }
+        }
+
+        stage ('Docker build'){
+            steps {
+                echo "Building"
+                sh """
+                    cd terraform/rds1/container
+                    docker build -t 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/node:latest .
+                """
+            }
+        }
+
+        stage ('Docker push'){
+            steps {
+                echo "Pushing"
+                sh """
+                    aws ecr get-login-password --region il-central-1 | docker login --username AWS --password-stdin 314525640319.dkr.ecr.il-central-1.amazonaws.com
+                    docker push 314525640319.dkr.ecr.il-central-1.amazonaws.com/amit/node:latest
+                """
+            }
+        }
+
+        stage ('Update ECS'){
+            steps {
+                echo "Updating ECS"
+                sh """
+                    aws ecs update-service \
+                        --cluster imtech \
+                        --service amit-nginx-service \
+                        --force-new-deployment
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

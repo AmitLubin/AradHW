@@ -1,0 +1,74 @@
+services:
+  jenkins:
+    # image: jenkins/jenkins:latest
+    build:
+      context: .
+    container_name: jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /usr/bin/docker:/usr/bin/docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/test/.ssh:/var/jenkins_home/.ssh
+      - /home/test/.kube/config:/var/jenkins_home/.kube/config:ro
+    restart: always
+    networks:
+      - default_net
+
+  # jenkins-agent:
+  #   image: jenkins/ssh-agent:latest
+  #   # build:
+  #   #   context: .
+  #   #   dockerfile: agent.Dockerfile
+  #   container_name: jenkins-agent
+  #   env_file:
+  #     - .env
+  #   restart: always
+  #   volumes:
+  #     - /usr/bin/docker:/usr/bin/docker
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /usr/bin/curl:/usr/bin/curl # Added now
+  #   networks:
+  #     - default_net
+    
+  
+  # artifactory:
+  #   image: registry
+  #   ports:
+  #     - 5000:5000
+  #   restart: always
+  
+  # nexus:
+  #   image: sonatype/nexus3
+  #   container_name: nexus
+  #   ports:
+  #     - "8081:8081"
+  #     - "8082:8082"
+  #   restart: always
+  #   volumes:
+  #     - nexus-data:/nexus-data
+  #   networks:
+  #     - default_net
+
+  # web:
+  #   image: nginx:latest
+  #   container_name: proxy-jenkins
+  #   ports:
+  #     - 80:9000
+  #   volumes:
+  #     - ./my_conf:/etc/nginx/conf.d
+  #   depends_on:
+  #     - jenkins
+  #   restart: always
+  #   networks:
+  #     - default_net
+
+volumes:
+  jenkins_home:
+  # nexus-data:
+
+networks:
+  default_net:
+    name: default_net

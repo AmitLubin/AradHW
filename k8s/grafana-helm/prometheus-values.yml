@@ -1,0 +1,7 @@
+server:
+  service:
+    type: NodePort
+    nodePort: 30900  # or any port you want in 30000-32767
+
+nodeExporter:
+  enabled: true

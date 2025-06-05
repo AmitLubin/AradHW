@@ -1,0 +1,133 @@
+def incrementNumber(String num){
+    num = num.toInteger() + 1
+    return num.toString()
+}
+
+def get_consul_version(){
+    // get val json
+    def val = sh(script: 'curl -s consul:8500/v1/kv/consul/version', returnStdout: true).trim()
+    // get val Value field in the json
+    val = sh(script: "echo '${val}' | jq -r '.[0].Value'", returnStdout: true).trim()
+    // get val base64 decode
+    val = sh(script: "echo '${val}' | base64 --decode", returnStdout: true).trim()
+    return val
+}
+
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'VERSION', defaultValue: '1.0.0', description: 'Version')
+        choice(name: 'APPENDER', choices: ['n', 'v', 's', 'b'], description: 'What type of version should it append')
+        booleanParam(name: 'DECLERATIVE_APPEND', defaultValue: false, description: 'Should it append version')
+    }
+
+    environment {
+        VER = get_consul_version()
+    }
+
+    stages {
+        stage ('Purpose'){
+            steps {
+                echo "Will create key value pair for consul using versions"
+            }
+        }
+
+        stage ('Print current version'){
+            steps {
+                script {
+                    if (params.DECLERATIVE_APPEND == true){
+                        echo "Version: ${params.VERSION}"
+                        VER = ${params.VERSION}
+                    }
+                    else if (!(VER?.trim())){
+                        echo "empty"
+                        VER = '1.0.0'
+                    }
+                    echo "Version is: $VER"
+                }
+            }
+        }
+
+        stage ('Append version'){
+            when {
+                expression { 
+                    return params.APPENDER == 'v' && params.DECLERATIVE_APPEND == false
+                }
+            }
+            steps {
+                script {
+                    echo "append version"
+                    def version = sh(script: "echo '$VER' | awk -F '.' '{print \$1}'", returnStdout: true).trim()
+                    version = incrementNumber(version)
+                    def sub = '0'
+                    def build = '0'
+                    VER = version + '.' + sub + '.' + build
+                    echo "new version: $VER"
+                }
+            }
+        }
+
+        stage ('Append sub-version'){
+            when {
+                expression { 
+                    return params.APPENDER == 's' && params.DECLERATIVE_APPEND == false
+                }
+            }
+            steps {
+                script {
+                    echo "append sub-version"
+                    def version = sh(script: "echo '$VER' | awk -F '.' '{print \$1}'", returnStdout: true).trim()
+                    def sub = sh(script: "echo '$VER' | awk -F '.' '{print \$2}'", returnStdout: true).trim()
+                    sub = incrementNumber(sub)
+                    def build = '0'
+                    VER = version + '.' + sub + '.' + build
+                    echo "$VER"
+                }
+            }
+        }
+
+        stage ('Append build'){
+            when {
+                expression { 
+                    return params.APPENDER == 'b' && params.DECLERATIVE_APPEND == false
+                }
+            }
+            steps {
+                script {
+                    echo "append build"
+                    def version = sh(script: "echo '$VER' | awk -F '.' '{print \$1}'", returnStdout: true).trim()
+                    def sub = sh(script: "echo '$VER' | awk -F '.' '{print \$2}'", returnStdout: true).trim()
+                    def build = sh(script: "echo '$VER' | awk -F '.' '{print \$3}'", returnStdout: true).trim()
+                    build = incrementNumber(build)
+                    VER = version + '.' + sub + '.' + build
+                    echo "$VER"
+                }
+            }
+        }
+
+        stage ('push'){
+            when {
+                expression {
+                    return params.APPENDER != 'n'
+                }
+            }
+            steps {
+                script {
+                    echo "$VER"
+                    sh "curl -X PUT --data '$VER' consul:8500/v1/kv/consul/version"
+                    def val = get_consul_version()
+                    echo "version in consul is $val"
+                }
+            }
+        }
+
+        // Last stage
+
+        stage ('Clean workspace'){
+            steps {
+                cleanWs()
+            }
+        }
+    }
+}

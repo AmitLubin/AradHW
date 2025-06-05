@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'SECRET', defaultValue: 'test', description: 'A secret inserted into Vault')
+        string(name: 'KEY', defaultValue: 'test', description: 'key inserted into Vault secret')
+        string(name: 'DATA', defaultValue: 'test', description: 'data inserted into Vault secret')
+        password(name: 'VAULT_TOKEN', description: 'Your vault secret token value')
+    }
+
+    environment {
+        VAULT_ADDR = 'vault:8200'
+    }
+
+    stages {
+        stage ('Pre-start'){
+            steps {
+                echo "Start of vault test"
+            }
+        }
+
+        stage ('Insert secret'){
+            steps {
+                sh """
+                    curl --header \"X-Vault-Token: ${params.VAULT_TOKEN}\" \\
+                    --request POST \\
+                    --data '{\"data\": {\"${params.KEY}\": \"${params.DATA}\"}}' \\
+                    ${VAULT_ADDR}/v1/secret/data/${params.SECRET}
+                """
+            }
+        }
+
+        stage ('Get secret'){
+            steps {
+                script {
+                    def res = sh(script: "curl -s --header 'X-Vault-Token: ${params.VAULT_TOKEN}' ${VAULT_ADDR}/v1/secret/data/${params.SECRET}", returnStdout: true).trim()
+                    res = sh(script: "echo '$res' | jq -r '.data.data.${params.KEY}'", returnStdout: true).trim()
+                    echo "$res"
+                }
+            }
+        }
+
+        //Last stage
+        stage ('Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+    }
+
+    
+}

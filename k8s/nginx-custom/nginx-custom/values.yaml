@@ -1,0 +1,10 @@
+replicas: 2
+tag: latest
+service:
+  type: ClusterIP
+  port: 30080
+  # annotations:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+  #   service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+ingress: 
+  enabled: true
