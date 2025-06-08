@@ -28,6 +28,21 @@ pipeline {
                     ).trim()
 
                     echo "$imageName"
+
+                     def imageExists = sh(
+                        script: """
+                        curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/${imageName}/tags/${TAG}/
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    echo "image tag exists return code: $imageExists"
+
+                    if (imageExists == '200') {
+                        echo "Docker tag ${TAG} exists for ${imageName}."
+                    } else {
+                        error "Docker tag ${TAG} does NOT exist for ${imageName}."
+                    }
                 }
             }
         }
