@@ -18,6 +18,19 @@ pipeline {
             }
         }
 
+        stage ('Is tag exist?') {
+            steps {
+                script {
+                    def imageName = sh (
+                        script: "kubectl get deployment ${DEPLOYMENT_NAME} -o jsonpath='{.spec.template.spec.containers[0].image}' | awk -F ':' '{print \$1}'",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "$imageName"
+                }
+            }
+        }
+
         stage ('Check docker image') {
             steps {
                 script {
