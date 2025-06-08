@@ -21,11 +21,6 @@ pipeline {
         }
 
         stage ('Change service type') {
-            when {
-                expression { 
-                    return SERVICE_TYPE == 'loadbalancer'
-                }
-            } 
             steps {
                 echo "Changing service to ${SERVICE_TYPE}"
                 sh """
