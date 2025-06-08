@@ -9,13 +9,29 @@ pipeline {
         string(name: 'TAG', defaultValue: 'latest', description: 'Nginx tag')
         string(name: 'CHART_NAME', defaultValue: 'custom', description: 'The deployment name is needed to retrieve the current docker image used')
         string(name: 'NAMESPACE', defaultValue: 'amit', description: 'Cluster namespace')
+        choice(name: 'SERVICE_TYPE', choices: ['ingress', 'loadbalancer']. description: 'Choose how do you want to load it')
     }
 
     stages {
         stage ('Echo msg') {
             steps {
-                echo "hi, I'm gonna update your nginx image"
+                echo "hi, I'm gonna update your nginx image and service type"
                 sh "kubectl get nodes"
+            }
+        }
+
+        stage ('Change service type') {
+            when {
+                expression { 
+                    return SERVICE_TYPE == 'loadbalancer'
+                }
+            } 
+            steps {
+                echo "Changing service to ${SERVICE_TYPE}"
+                sh """
+                    cd ./k8s/nginx-custom/
+                    helm upgrade --install ${CHART_NAME} ./nginx-custom/ -f ${SERVICE_TYPE}-values.yaml --set tag=${TAG} -n ${NAMESPACE}
+                """
             }
         }
 
