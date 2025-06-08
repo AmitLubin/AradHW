@@ -7,7 +7,8 @@ pipeline {
 
     parameters {
         string(name: 'TAG', defaultValue: 'latest', description: 'Nginx tag')
-        string(name: 'DEPLOYMENT_NAME', defaultValue: 'nginx-custom-deployment', description: 'The deployment name is needed to retrieve the current docker image used')
+        string(name: 'CHART_NAME', defaultValue: 'custom', description: 'The deployment name is needed to retrieve the current docker image used')
+        string(name: 'NAMESPACE', defaultValue: 'amit', description: 'Cluster namespace')
     }
 
     stages {
@@ -22,7 +23,7 @@ pipeline {
             steps {
                 script {
                     def imageName = sh (
-                        script: "kubectl get deployment ${DEPLOYMENT_NAME} -o jsonpath='{.spec.template.spec.containers[0].image}' | awk -F ':' '{print \$1}'",
+                        script: "kubectl get deployment nginx-${CHART_NAME}-deployment -n ${NAMESPACE} -o jsonpath='{.spec.template.spec.containers[0].image}' | awk -F ':' '{print \$1}'",
                         returnStdout: true
                     ).trim()
 
@@ -35,7 +36,7 @@ pipeline {
             steps {
                 script {
                     def currentTag = sh(
-                        script: "kubectl get deployment ${DEPLOYMENT_NAME} -o jsonpath='{.spec.template.spec.containers[0].image}' | awk -F ':' '{print \$2}'",
+                        script: "kubectl get deployment nginx-${CHART_NAME}-deployment -n ${NAMESPACE} -o jsonpath='{.spec.template.spec.containers[0].image}' | awk -F ':' '{print \$2}'",
                         returnStdout: true
                     ).trim()
 
@@ -57,7 +58,7 @@ pipeline {
             steps {
                 sh """
                     cd ./k8s/nginx-custom/
-                    helm upgrade --install custom ./nginx-custom/ -f values.yaml --set tag=${TAG} -n amit
+                    helm upgrade --install ${CHART_NAME} ./nginx-custom/ -f values.yaml --set tag=${TAG} -n ${NAMESPACE}
                 """
             }
         }
