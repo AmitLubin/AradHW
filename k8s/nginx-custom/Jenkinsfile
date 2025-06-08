@@ -14,6 +14,7 @@ pipeline {
         stage ('Echo msg') {
             steps {
                 echo "hi, I'm gonna update your nginx image"
+                sh "kubectl get nodes"
             }
         }
 
@@ -43,7 +44,7 @@ pipeline {
             steps {
                 sh """
                     cd ./k8s/nginx-custom/
-                    helm upgrade --install custom ./nginx-custom/ -f values.yaml --set tag=${TAG}
+                    helm upgrade --install custom ./nginx-custom/ -f values.yaml --set tag=${TAG} -n amit
                 """
             }
         }
