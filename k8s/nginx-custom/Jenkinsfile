@@ -1,3 +1,10 @@
+def helmUpgrade(dash) {
+    sh """
+        cd ./k8s/nginx-custom/
+        helm upgrade --install ${params.CHART_NAME} ./nginx-custom/ -f ${params.SERVICE_TYPE}${dash}values.yaml --set tag=${params.TAG} -n ${params.NAMESPACE}
+    """
+}
+
 pipeline {
     agent any
 
@@ -23,10 +30,11 @@ pipeline {
         stage ('Change service type') {
             steps {
                 echo "Changing service to ${SERVICE_TYPE}"
-                sh """
-                    cd ./k8s/nginx-custom/
-                    helm upgrade --install ${CHART_NAME} ./nginx-custom/ -f ${SERVICE_TYPE}-values.yaml --set tag=${TAG} -n ${NAMESPACE}
-                """
+                helmUpgrade("-")
+                // sh """
+                //     cd ./k8s/nginx-custom/
+                //     helm upgrade --install ${CHART_NAME} ./nginx-custom/ -f ${SERVICE_TYPE}-values.yaml --set tag=${TAG} -n ${NAMESPACE}
+                // """
             }
         }
 
