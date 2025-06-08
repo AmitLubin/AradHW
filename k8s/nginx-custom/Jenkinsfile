@@ -90,10 +90,11 @@ pipeline {
                 }
             } 
             steps {
-                sh """
-                    cd ./k8s/nginx-custom/
-                    helm upgrade --install ${CHART_NAME} ./nginx-custom/ -f values.yaml --set tag=${TAG} -n ${NAMESPACE}
-                """
+                helmUpgrade("")
+                // sh """
+                //     cd ./k8s/nginx-custom/
+                //     helm upgrade --install ${CHART_NAME} ./nginx-custom/ -f values.yaml --set tag=${TAG} -n ${NAMESPACE}
+                // """
             }
         }
     }
