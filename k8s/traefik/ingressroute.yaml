@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: amit-nginx-ingressroute
+  namespace: amit
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`amit-traefik.aws.cts.care`) && PathPrefix(`/amit/`)
+      kind: Rule
+      services:
+        - name: amit-t-nginx
+          port: 80
+      middlewares:
+        - name: strip-amit-prefix
